@@ -1,0 +1,119 @@
+---
+title: "ST684: Assignment 1"
+author: "Nishant Kumar"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+suppressMessages(library(tidyverse))
+suppressMessages(library(ggplot2))
+suppressMessages(library(GGally))
+
+```
+
+#### Question 4
+
+
+
+```{r} 
+w <-read.csv("/users/students/19251001/R_workings/worldhappiness2019.csv")
+names(w)<- c( "Rank", "Country", "Score", "GDP", "Family", "Life", "Freedom", "Generosity", "Trust")
+rownames(w)<-w$Country
+wscores<-w[,-(1:3)]
+```
+
+(a)Calculate the correlation matrix of the scores. Which pair of variables have the highest correlation? Make a scatterplot of the scores for these two variables. Find the name of the outlying country on this graph.
+
+```{r}
+
+cor(wscores)
+#GDP and life has highest correlation and gdp and family has second highest #correlation.
+w1<-data.frame(wscores,w$Country)
+head(w1)
+p2<-ggplot(w1,aes(x=w1$GDP,w1$Life,col=w1$w.Country))+geom_point()
+p2+geom_text(aes(label=w$Country),hjust=0, vjust=0)
+#swaziland is the outlying country on the graph
+```
+The pair of variables with the highest correlation are ??.
+The outlying country on this graph is ??.
+
+(b)Construct the euclidean distance matrix wscores (no standardisation). Use it to cluster the countries, using average linkage. Draw the dendrogram. Are there any outlier countries?
+```{r}
+
+library(dendextend)
+d1<-as.matrix(dist(wscores,method="euclidean"))
+d1
+d2<-dist(wscores,"euclidean")
+h<-hclust(d2,"average")
+d4<-as.dendrogram(h)
+d3<-colord5<-color_branches(d4,k=3,col=c(1:3))
+plot(d3)
+#Central African Republic
+
+```
+
+(c)How many countries are in the clusters of the three cluster solution? Which cluster does Ireland belong to? India? Which cluster has the countries with the highest Family score? (use sumPartition). Which cluster has the highest scores?
+```{r}
+
+p<-cutree(h, 3)
+p
+source("/users/students/19251001/R_workings/semester2/h1code.R")
+sumPartition(wscores,cutree(h,3))
+#total countries in three cluster solution is 156
+#Ireland belongs to cluster 1
+#India belongs to cluster 2
+#Cluster 1 has the highest Family score.
+#Cluster 1 has the highest  scores overall.
+
+```
+
+(d)Make a parallel coordinate plot of the scores coloured by the clusters. Choose a suitable scaling. What is unusual about the lowest-scoring cluster from this graph?
+```{r}
+
+w2<-data.frame(w1,p)
+w2$p
+ggparcoord(w2,columns=1:6, groupColumn="p",scale="globalminmax")
+#The value of Family is almost equal to zero and GDP is also near to the zero #for the third cluster but freedom and generosity fairly better to the other #countires with good GDP and family scores.
+
+```
+
+The lowest scoring cluster is unusual becuase ???
+
+(e)Cluster the countries using kmeans (no standardisation), use nstart=10, centers=3,and a seed of 123. Are there any outlier countries?
+```{r}
+
+set.seed(123)
+wscores1<-scale(wscores)
+head(wscores)
+km <- kmeans(wscores1,3,nstart= 10)
+tab<-table(w1$w.Country,km$cluster)
+tab
+#There are no outlier countries
+
+```
+(f)Make a parallel coordinate plot of the scores coloured by the kmeans clusters. Choose a suitable scaling. From the graph, which cluster has the countries with the highest Family score? Which cluster has the highest scores overall?
+```{r}
+
+w3<-data.frame(w1,km$cluster)
+head(w3)
+ggparcoord(w3,columns=1:6, groupColumn="km.cluster",scale="globalminmax")
+ggplot(data=w3, aes(x=km.cluster,fill=Family))+ geom_bar()
+#cluster 1 has highest family scores
+sumPartition(wscores,km$cluster)
+#cluster 1 has highest overall scores.
+
+```
+
+
+(g)For the kmeans clustering result, make a boxplot of Score (in w) for the three clusters.Comment on how the Scores of the clusters compare.
+```{r}
+
+boxplot(wscores,w3$km.cluster)
+```
+
