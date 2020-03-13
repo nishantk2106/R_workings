@@ -1,0 +1,106 @@
+---
+title: "Assignment 2 ST684"
+author: "Nishant Kumar and 19251001"
+date: "`r format(Sys.time(), '%X %d %B, %Y')`"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width=4, fig.height=4)
+```
+
+
+```{r, eval=T, echo=FALSE}
+suppressMessages(library(tidyverse))
+suppressMessages(library(ggplot2))
+suppressMessages(library(GGally))
+
+```
+
+
+
+#### Question 1
+###1. Consider the body fat data on Moodle. The data consists of observations taken on a sample of 88 males. In this question you will look at PCA of the variables variables were measured:
+##            Neck circumference (cm) Abdomen circumference (cm)
+##            Knee circumference (cm) Ankle circumference (cm)
+
+```{r eval=T} 
+# change to eval=T
+bfat <- read.table("bodyfat.txt", header=T)
+bfat <- bfat[,c("neck","abdomen", "knee", "ankle")]
+source("h2code.R")
+
+```
+
+###(a)Use pairs to construct a scatterplot matrix. Are there any outliers? If so, which cases are they?
+```{r}
+
+pairs(bfat, pch=21, cex=.5,
+      panel=function(x, y, ...) { points(x, y, ...); 
+        text(x, y, 1:nrow(bfat),cex=.7,pos=2,offset =.3) })
+
+```
+
+yes. There are outliers available.
+Neck vs Ankle-case 31,84
+Abdomen vs ankle-case 31,84
+knee vs Ankle-case 31,84
+
+###(b)Carry out a principal components analysis of the data. What percentage of the variability in the dataset is accounted for by the first component? What percentage of the variability in the dataset is accounted for by the first two components? Examine the scree diagram and comment. (You will find the code for the screeplot in h2code.R).
+```{r}
+sapply(bfat,var)
+p<-prcomp(bfat,scale=TRUE,retx = T)
+summary(p)
+screeplot(p)
+
+```
+
+Percentage of variability by the first component 66.29%.
+Percentage of variability by the first two component is 85.35%.
+From the screeplot we can see that variability in the dataset is accounted for by first two component is total of 85.35%.so the slope of the curve is leveling off from component 2 to 3.This indicates that first 2 components can be considered in the PCA.
+
+
+(c)What does the first component measure? the second component? Make a biplot to assist your interpretations. Are there any outliers? What can you say about the outliers from the plot?
+
+```{r}
+p$rotation[,1:2]
+biplot(p, scale=0, cex=c(.5,.5), cex.axis=.5)
+
+```
+
+The first principal component gives the direction in which projections have the largest variance.
+y= 0.523*neck+0.5351*abdomen+0.546099*knee+0.3691*ankle
+the y measures the overall bfat by circumferance.cases with high PC1 has high measurement for all the 4 variables.(eg:40,35)
+
+The second principal component gives the direction which maximizes variance among all directions orthogonal to the first.
+y=0.2193*neck+0.3520*abdomen+0.0566*knee-0.9081*ankle
+The second component gives most weight(negative) to ankle, so cases with high ankle circumference measure will have a low score on PC2.(eg:84,31)
+
+
+(d) Omiting any outliers identified, recalculate the pca and repeat part (c). Are there any visible outliers?
+```{r}
+p1<-prcomp(bfat[-c(84,31),],scale=TRUE,retx=T)
+p1
+summary(p1)
+screeplot(p1)
+biplot(p1,scale=0,cex=c(.5,.5),cex.axis=.5)
+```
+
+The first principal component gives the direction in which projections have the largest variance.
+y= 0.5002*neck+0.5005*abdomen+0.5251*knee+0.4726*ankle
+The second principal component gives the direction which maximizes variance among all directions orthogonal to the first.
+y=0.3230*neck+0.5460*abdomen-0.1447*knee-0.7593*ankle
+
+The coefficient of interepetation are same as part(c).
+Percentage of variability by the first component 73.84%.
+Percentage of variability by the first two component is 86.75%.
+
+No there are no visible outliers.
+
+
+
+
+
+
