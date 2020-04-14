@@ -1,0 +1,73 @@
+---
+title: "ST466 Assignment 2"
+author: "Nishant Kumar"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+
+```{r}
+library(dplyr)
+library(GGally)
+intensity <- c(0.0,0.5,1.0,1.5,2.0,2.5,3.0,3.5,4.0)
+m <- c(40,40,40,40,40,40,40,40,40)
+Y <- c(2,4,6,6,10,15,25,27,33)
+current.data <- data.frame(intensity,m,Y)
+current.data$p_yes <- current.data$Y/current.data$m
+current.data$odds <- current.data$p_yes/(1-current.data$p_yes)
+current.data$log_odds <- log(current.data$odds)
+current.data$diff <- current.data$m - current.data$Y
+current.data
+plot(current.data$log_odds ~ current.data$intensity)
+
+```
+
+
+
+```{r}
+glm_data <- current.data %>% mutate(failure = m - Y) %>% select(Y,failure)%>% as.matrix()
+glm_data
+fit_logreg <- glm(glm_data ~ intensity ,data = current.data,family = binomial())
+summary(fit_logreg)
+```
+
+
+```{r}
+wald_test <- 1.122/0.125
+wald_test
+```
+
+
+```{r}
+fit0 <- glm(Y ~ 1, data = current.data)
+fit0
+
+fit1 <- glm(Y ~ intensity, data = current.data)
+fit1
+```
+
+
+```{r}
+
+current_res <- current.data %>%
+mutate(pred_fit0 = predict(fit0, type = "response"),
+pred_fit1 = predict(fit1, type = "response"))
+current_res
+ggplot(current_res, aes(x = intensity, y = Y)) +
+geom_point()+
+geom_line(aes(x = intensity, pred_fit0, colour = "fit0")) +
+geom_line(aes(x = intensity, pred_fit1, colour = "fit1")) +
+labs(colour = "")
+```
+
+
+```{r}
+```
+
+
+```{r}
+```
+
+

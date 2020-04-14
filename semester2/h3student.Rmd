@@ -1,0 +1,152 @@
+---
+title: "Assignment 3 ST684"
+author: "Nishant Kumar 19251001"
+date: "`r format(Sys.time(), '%X %d %B, %Y')`"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width=4, fig.height=4)
+```
+
+
+```{r, eval=T, echo=FALSE}
+suppressMessages(library(tidyverse))
+suppressMessages(library(ggplot2))
+suppressMessages(library(GGally))
+
+```
+
+
+
+#### Question 2
+
+
+
+```{r eval=T} 
+
+library(MASS)
+library(ISLR)
+library(class)
+m <- median(Auto$mpg)
+Auto$mpg01 <- factor(ifelse(Auto$mpg <= m, 0, 1))
+ set.seed(1) 
+s <- sample(nrow(Auto), round(.5*nrow(Auto)))
+Atrain <- Auto[s,]
+Atest <- Auto[-s,]
+```
+
+(a)Plot the variables weight and acceleration using colour to show the two levels of mpg01 for the training set.
+
+```{r}
+head(Atest)
+ggplot(data=Atrain, aes(x=weight, y=acceleration)) +
+geom_point(aes(color=as.factor(mpg01)))+
+  labs(colour="Levels of Mpg")
+
+```
+
+
+(b)Perform a linear discriminant analysis to predict mpg01, using variables weight and acceleration, on the training set. Use a plot to show the discriminant boundaries.What is the test error of the model obtained?
+
+```{r}
+f <- lda(mpg01~weight+acceleration,data=Atrain)
+f
+grid <- expand.grid(
+weight = seq(1600, 5200, length = 100),
+acceleration = seq(8, 25, length = 3)
+)
+grid$prob <- predict(f, grid)$posterior[,1]
+
+ggplot(data=Atrain, aes(x=weight, y=acceleration)) +
+geom_point(aes(color=mpg01),alpha=.5)+
+geom_contour(data=grid,aes(z=prob),breaks=.5, color="black")
+pred <- predict(f,Atest)$class
+pred
+table(Atest$mpg01, pred)
+mean(pred!= Atest$mpg01)
+
+#The overall test error of model is 12.755%
+```
+
+
+(c)Repeat (b) using quadratic discriminant analysis. Which is better, LDA or QDA?
+```{r}
+f1 <- qda( mpg01~ weight+acceleration ,data=Atrain)
+f1
+grid1 <- expand.grid(
+weight = seq(1600, 5200, length = 100),
+acceleration = seq(8, 25, length = 3)
+)
+
+grid1$prob1 <- predict(f1,grid1)$posterior[,1]
+ggplot(data=Atrain, aes(x=weight, y=acceleration)) +
+geom_point(aes(color=mpg01),alpha=.5)+
+geom_contour(data=grid1,aes(z=prob1),breaks=.5, color="black")
+
+pred1 <- predict(f1,Atest)$class
+table(Atest$mpg01, pred1)
+mean(pred1!= Atest$mpg01)
+#The overall mis-classification rate is 11.73%
+## LDA or QDA? QDA is better becuse the test error is lower in case of QDA.
+
+```
+
+
+(d)Perform a linear discriminant analysis to predict mpg01, using variables displacement,horsepower, weight and acceleration on the training set. What is the test error of the model obtained?
+```{r}
+fd <- lda(mpg01~displacement+horsepower+weight+acceleration,data=Atrain)
+fd
+pred4 <- predict(fd,Atest)$class
+pred4
+table(Atest$mpg01, pred4)
+mean(pred4!= Atest$mpg01)
+#The overall test error rate is 12.75%
+```
+
+
+(e)Repeat (d) using quadratic discriminant analysis.Which is better, LDA or QDA?
+```{r}
+fe <- qda(mpg01~displacement+horsepower+weight+acceleration,data=Atrain)
+fe
+pr <- predict(fe,Atest)$class
+table(Atest$mpg01, pr)
+mean(pr!= Atest$mpg01)
+#The overall test error rate is 12.75%
+# Test error are same in both the case.
+# QDA will be more parameters for than LDA.
+#LDA is better in this case since there are 4 predictors which will have less parameters.
+
+```
+
+
+(f)Perform KNN with response of mpg01, and the four predictors displacement, horsepower, weight and acceleration. Remember to scale the predictors. Use k = 5 andk = 30. Which value of k gives the best result on the test set?
+```{r}
+head(Atrain)
+xdata <- scale(Atrain[,3:6])
+means <- attr(xdata,"scaled:center")
+sds<- attr(xdata,"scaled:scale")
+grids <- scale(Atest[,3:6], center=means, scale=sds)
+pred6 <- knn(xdata, grids, Atrain[,10], k=5)
+table(Atest$mpg01,pred6)
+mean(pred6!= Atest$mpg01)
+pred7<-knn(xdata, grids, Atrain[,10], k=30)
+table(Atest$mpg01,pred7)
+mean(pred7!= Atest$mpg01)
+#Total test error of k=5 for test set is 11.73%
+#Total test error rate of k=30 test set is 12.2449%
+#k=5 KNN algorithms is better
+```
+
+
+
+```{r}
+
+```
+
+
+
+
+
